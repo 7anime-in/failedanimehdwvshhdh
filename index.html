@@ -1,1195 +1,817 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>7Anime — Anime Streaming UI</title>
-
-<style>
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-}
-
-:root{
-  --bg:#090a0f;
-  --card:#11131b;
-  --card2:#171923;
-  --text:#f5f5f7;
-  --muted:#9296a5;
-  --accent:#7c5cff;
-  --accent2:#9b82ff;
-  --border:#242633;
-  --danger:#ff5263;
-  --success:#48d597;
-}
-
-body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:Arial,Helvetica,sans-serif;
-  min-height:100vh;
-}
-
-button,
-input,
-select{
-  font:inherit;
-}
-
-button{
-  cursor:pointer;
-}
-
-a{
-  color:inherit;
-  text-decoration:none;
-}
-
-/* =========================
-   LOADING / SHIMMER
-========================= */
-
-#loader{
-  position:fixed;
-  inset:0;
-  z-index:9999;
-  background:var(--bg);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:.4s;
-}
-
-.loader-box{
-  width:min(90%,500px);
-}
-
-.loader-logo{
-  text-align:center;
-  font-size:42px;
-  font-weight:900;
-  margin-bottom:30px;
-}
-
-.loader-logo span{
-  color:var(--accent);
-}
-
-.shimmer{
-  position:relative;
-  overflow:hidden;
-  background:#151720;
-  border-radius:8px;
-}
-
-.shimmer::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  transform:translateX(-100%);
-  background:linear-gradient(
-    90deg,
-    transparent,
-    rgba(255,255,255,.08),
-    transparent
-  );
-  animation:shimmer 1.2s infinite;
-}
-
-@keyframes shimmer{
-  100%{
-    transform:translateX(100%);
-  }
-}
-
-.loader-line{
-  height:14px;
-  margin:12px 0;
-}
-
-.loader-line.big{
-  height:35px;
-  width:65%;
-  margin:auto;
-}
-
-/* =========================
-   HEADER
-========================= */
-
-header{
-  position:sticky;
-  top:0;
-  z-index:100;
-  background:rgba(9,10,15,.92);
-  backdrop-filter:blur(16px);
-  border-bottom:1px solid var(--border);
-}
-
-.navbar{
-  max-width:1400px;
-  margin:auto;
-  min-height:70px;
-  padding:12px 20px;
-  display:flex;
-  align-items:center;
-  gap:22px;
-}
-
-.logo{
-  font-size:27px;
-  font-weight:900;
-  white-space:nowrap;
-  cursor:pointer;
-}
-
-.logo span{
-  color:var(--accent);
-}
-
-.nav-links{
-  display:flex;
-  gap:5px;
-  flex:1;
-  overflow:auto;
-}
-
-.nav-links button{
-  background:none;
-  color:var(--muted);
-  border:0;
-  padding:10px 11px;
-  border-radius:8px;
-  white-space:nowrap;
-}
-
-.nav-links button:hover,
-.nav-links button.active{
-  color:#fff;
-  background:var(--card2);
-}
-
-.header-search{
-  width:210px;
-}
-
-.header-search input{
-  width:100%;
-  padding:10px 13px;
-  border:1px solid var(--border);
-  background:var(--card);
-  color:white;
-  border-radius:9px;
-  outline:none;
-}
-
-.menu-btn{
-  display:none;
-  background:var(--card);
-  color:#fff;
-  border:1px solid var(--border);
-  padding:8px 11px;
-  border-radius:8px;
-}
-
-/* =========================
-   APP
-========================= */
-
-main{
-  max-width:1400px;
-  margin:auto;
-  padding:25px 20px 70px;
-}
-
-.page{
-  animation:pageIn .25s ease;
-}
-
-@keyframes pageIn{
-  from{
-    opacity:0;
-    transform:translateY(8px);
-  }
-  to{
-    opacity:1;
-    transform:none;
-  }
-}
-
-.hero{
-  min-height:440px;
-  border-radius:20px;
-  padding:55px;
-  display:flex;
-  align-items:center;
-  background:
-    linear-gradient(90deg,#090a0f 15%,rgba(9,10,15,.78),rgba(9,10,15,.2)),
-    linear-gradient(135deg,#252039,#11131b);
-  margin-bottom:35px;
-}
-
-.hero-content{
-  max-width:650px;
-}
-
-.badge{
-  display:inline-block;
-  background:var(--accent);
-  padding:7px 12px;
-  border-radius:20px;
-  font-size:12px;
-  font-weight:bold;
-  margin-bottom:15px;
-}
-
-.hero h1{
-  font-size:clamp(35px,6vw,68px);
-  line-height:1;
-  margin-bottom:18px;
-}
-
-.hero p{
-  color:#b8bbc7;
-  line-height:1.7;
-  margin-bottom:22px;
-}
-
-.actions{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-
-.btn{
-  border:0;
-  padding:11px 17px;
-  border-radius:9px;
-  background:var(--accent);
-  color:#fff;
-  font-weight:bold;
-}
-
-.btn:hover{
-  background:var(--accent2);
-}
-
-.btn.secondary{
-  background:var(--card2);
-  border:1px solid var(--border);
-}
-
-.btn.danger{
-  background:var(--danger);
-}
-
-/* =========================
-   SECTIONS
-========================= */
-
-.section{
-  margin:35px 0;
-}
-
-.section-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:18px;
-}
-
-.section-head h2{
-  font-size:22px;
-}
-
-.section-head button{
-  border:0;
-  background:none;
-  color:var(--accent2);
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(6,1fr);
-  gap:16px;
-}
-
-.card{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:12px;
-  overflow:hidden;
-  transition:.2s;
-  min-width:0;
-}
-
-.card:hover{
-  transform:translateY(-4px);
-  border-color:#3a3e50;
-}
-
-.poster{
-  aspect-ratio:2/3;
-  background:
-    linear-gradient(135deg,#282038,#12141c);
-  display:flex;
-  align-items:flex-end;
-  padding:12px;
-  position:relative;
-}
-
-.poster-number{
-  font-size:48px;
-  font-weight:900;
-  opacity:.13;
-}
-
-.card-info{
-  padding:12px;
-}
-
-.card-title{
-  font-weight:bold;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-.card-meta{
-  color:var(--muted);
-  font-size:12px;
-  margin-top:7px;
-}
-
-.card-buttons{
-  display:flex;
-  gap:5px;
-  margin-top:10px;
-}
-
-.small-btn{
-  flex:1;
-  border:1px solid var(--border);
-  background:var(--card2);
-  color:white;
-  padding:7px;
-  border-radius:7px;
-  font-size:11px;
-}
-
-/* =========================
-   DETAILS
-========================= */
-
-.detail{
-  display:grid;
-  grid-template-columns:230px 1fr;
-  gap:30px;
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:15px;
-  padding:25px;
-}
-
-.detail-poster{
-  aspect-ratio:2/3;
-  border-radius:10px;
-  background:linear-gradient(135deg,#30254e,#11131b);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:70px;
-  font-weight:900;
-  opacity:.8;
-}
-
-.detail h1{
-  font-size:38px;
-  margin-bottom:12px;
-}
-
-.detail p{
-  color:#afb2bf;
-  line-height:1.7;
-  margin:15px 0;
-}
-
-.tags{
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-  margin:12px 0;
-}
-
-.tag{
-  border:1px solid var(--border);
-  padding:6px 9px;
-  border-radius:20px;
-  font-size:12px;
-  color:#c5c7d0;
-}
-
-/* =========================
-   PLAYER
-========================= */
-
-.player{
-  background:#000;
-  border-radius:14px;
-  overflow:hidden;
-  border:1px solid var(--border);
-}
-
-.video{
-  aspect-ratio:16/9;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:
-    radial-gradient(circle at center,#28213c,#050507 65%);
-  position:relative;
-}
-
-.play-circle{
-  width:75px;
-  height:75px;
-  border-radius:50%;
-  background:rgba(124,92,255,.9);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:30px;
-  cursor:pointer;
-}
-
-.video-label{
-  position:absolute;
-  bottom:15px;
-  left:15px;
-  color:#aaa;
-  font-size:12px;
-}
-
-.controls{
-  padding:10px;
-  display:flex;
-  gap:8px;
-  align-items:center;
-}
-
-.progress{
-  flex:1;
-  height:5px;
-  background:#272832;
-  border-radius:5px;
-  overflow:hidden;
-  cursor:pointer;
-}
-
-.progress-bar{
-  width:0%;
-  height:100%;
-  background:var(--accent);
-}
-
-/* =========================
-   EPISODES
-========================= */
-
-.episodes{
-  display:grid;
-  grid-template-columns:repeat(8,1fr);
-  gap:8px;
-}
-
-.ep{
-  padding:10px;
-  border:1px solid var(--border);
-  background:var(--card);
-  color:#bbb;
-  border-radius:7px;
-}
-
-.ep:hover,
-.ep.active{
-  background:var(--accent);
-  color:#fff;
-  border-color:var(--accent);
-}
-
-/* =========================
-   SEARCH
-========================= */
-
-.search-box{
-  display:flex;
-  gap:10px;
-  margin-bottom:25px;
-}
-
-.search-box input,
-.form-input{
-  flex:1;
-  background:var(--card);
-  border:1px solid var(--border);
-  color:#fff;
-  padding:13px;
-  border-radius:9px;
-  outline:none;
-}
-
-/* =========================
-   INFO / SETTINGS
-========================= */
-
-.info-box{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:14px;
-  padding:25px;
-  line-height:1.8;
-}
-
-.setting{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:17px 0;
-  border-bottom:1px solid var(--border);
-}
-
-.setting:last-child{
-  border:0;
-}
-
-select{
-  background:var(--card2);
-  color:white;
-  border:1px solid var(--border);
-  padding:8px;
-  border-radius:7px;
-}
-
-/* =========================
-   TOAST
-========================= */
-
-#toast{
-  position:fixed;
-  right:20px;
-  bottom:20px;
-  z-index:500;
-  background:#191b25;
-  border:1px solid var(--border);
-  color:white;
-  padding:13px 17px;
-  border-radius:9px;
-  transform:translateY(100px);
-  opacity:0;
-  transition:.3s;
-}
-
-#toast.show{
-  transform:none;
-  opacity:1;
-}
-
-/* =========================
-   RESPONSIVE
-========================= */
-
-@media(max-width:1100px){
-  .grid{
-    grid-template-columns:repeat(4,1fr);
-  }
-
-  .nav-links{
-    display:none;
-  }
-
-  .menu-btn{
-    display:block;
-  }
-
-  .header-search{
-    margin-left:auto;
-  }
-}
-
-@media(max-width:700px){
-  main{
-    padding:15px 12px 50px;
-  }
-
-  .navbar{
-    padding:10px 12px;
-    gap:10px;
-  }
-
-  .logo{
-    font-size:22px;
-  }
-
-  .header-search{
-    width:135px;
-  }
-
-  .hero{
-    min-height:350px;
-    padding:25px;
-  }
-
-  .grid{
-    grid-template-columns:repeat(2,1fr);
-    gap:10px;
-  }
-
-  .detail{
-    grid-template-columns:110px 1fr;
-    padding:15px;
-    gap:15px;
-  }
-
-  .detail h1{
-    font-size:23px;
-  }
-
-  .episodes{
-    grid-template-columns:repeat(4,1fr);
-  }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>7Anime - Watch Anime, Movies & More</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================
+       1. GLOBAL & CORE STYLES
+       ========================================== */
+    :root {
+      --bg-dark: #080914;
+      --bg-card: #121426;
+      --bg-card-hover: #1a1d36;
+      --primary: #6c5ce7;
+      --primary-hover: #5b4bc4;
+      --accent-pink: #ff3b70;
+      --accent-orange: #ff7675;
+      --accent-gold: #f1c40f;
+      --text-main: #f1f2f6;
+      --text-muted: #8c92a4;
+      --border-glass: rgba(255, 255, 255, 0.08);
+      --glass-bg: rgba(18, 20, 38, 0.75);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      outline: none;
+      font-family: inherit;
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #252945;
+      border-radius: 4px;
+    }
+
+    /* Container Padding */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ==========================================
+       2. HEADER & NAVIGATION
+       ========================================== */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(8, 9, 20, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+      gap: 20px;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .brand-logo span.badge-7 {
+      background: linear-gradient(135deg, var(--accent-pink), var(--primary));
+      padding: 2px 10px;
+      border-radius: 6px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-link {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: 0.3s;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      color: #fff;
+      background: var(--primary);
+    }
+
+    /* Search Bar Engine UI */
+    .search-box-wrapper {
+      position: relative;
+      flex: 1;
+      max-width: 420px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-glass);
+      border-radius: 30px;
+      padding: 8px 16px;
+      gap: 10px;
+    }
+
+    .search-box input {
+      background: transparent;
+      border: none;
+      color: #fff;
+      width: 100%;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .search-box input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Search Live Dropdown */
+    .search-dropdown {
+      position: absolute;
+      top: 110%;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: none;
+      flex-direction: column;
+      max-height: 380px;
+      overflow-y: auto;
+      z-index: 200;
+    }
+
+    .search-dropdown.active {
+      display: flex;
+    }
+
+    .search-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-glass);
+      transition: background 0.2s;
+    }
+
+    .search-item:hover {
+      background: var(--bg-card-hover);
+    }
+
+    .search-item img {
+      width: 40px;
+      height: 55px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+
+    .search-item-info h4 {
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .search-item-info p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .icon-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-glass);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    /* ==========================================
+       3. HERO BANNER
+       ========================================== */
+    .hero-section {
+      position: relative;
+      margin-top: 20px;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      height: 460px;
+      background: linear-gradient(to right, #080914 20%, transparent 80%),
+                  linear-gradient(to top, #080914 5%, transparent 60%),
+                  url('https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+    }
+
+    .hero-content {
+      position: absolute;
+      bottom: 40px;
+      left: 40px;
+      max-width: 550px;
+      z-index: 2;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: var(--accent-pink);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+
+    .hero-title {
+      font-size: 38px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+
+    .hero-meta {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .hero-btns {
+      display: flex;
+      gap: 14px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.3s;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 0 15px var(--primary);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--border-glass);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-weight: 700;
+      transition: 0.3s;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* ==========================================
+       4. CATEGORY BANNER CARDS
+       ========================================== */
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 24px;
+    }
+
+    .cat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cat-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--primary);
+    }
+
+    .cat-info h3 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .cat-info p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .cat-arrow {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ==========================================
+       5. CONTENT RAILS / SECTIONS & CARDS
+       ========================================== */
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 36px 0 18px 0;
+    }
+
+    .section-title h2 {
+      font-size: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .view-all {
+      font-size: 13px;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* Vertical Cards Grid */
+    .anime-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 18px;
+    }
+
+    .anime-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border-glass);
+      transition: 0.3s;
+      position: relative;
+    }
+
+    .anime-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .card-thumb {
+      position: relative;
+      width: 100%;
+      height: 250px;
+      background-color: #1a1d36;
+    }
+
+    .card-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .rank-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .rating-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      color: var(--accent-gold);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    .card-info {
+      padding: 12px;
+    }
+
+    .card-info h4 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .genre-tags {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .tag {
+      background: rgba(255,255,255,0.06);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    .ep-tag {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Continue Watching Landscape Cards */
+    .continue-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 18px;
+    }
+
+    .cw-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border-glass);
+    }
+
+    .cw-thumb {
+      height: 130px;
+      position: relative;
+      background: #1a1d36;
+    }
+
+    .cw-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .progress-bar-bg {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--primary);
+    }
+
+    /* Genres Section */
+    .genres-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px;
+    }
+
+    .genre-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      text-align: center;
+      transition: 0.3s;
+    }
+
+    .genre-card:hover {
+      background: var(--primary);
+    }
+
+    /* ==========================================
+       6. SKELETON ANIMATION & MODAL
+       ========================================== */
+    .skeleton {
+      animation: pulse 1.5s infinite ease-in-out;
+      background: linear-gradient(90deg, #121426 25%, #1a1d36 50%, #121426 75%);
+      background-size: 200% 100%;
+    }
+
+    @keyframes pulse {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* 18+ Hentai Age Verification Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .modal-card h3 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .modal-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .modal-btns {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    /* ==========================================
+       7. FOOTER
+       ========================================== */
+    footer {
+      margin-top: 60px;
+      border-top: 1px solid var(--border-glass);
+      padding: 40px 0;
+      background: rgba(8, 9, 20, 0.95);
+    }
+
+    .footer-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* ==========================================
+       8. RESPONSIVE DESIGN (TABLET & MOBILE)
+       ========================================== */
+    @media (max-width: 900px) {
+      .category-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero-title {
+        font-size: 28px;
+      }
+      .nav-links {
+        display: none; /* Can be toggled with JS mobile menu */
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-<!-- LOADING SCREEN -->
-<div id="loader">
-  <div class="loader-box">
-    <div class="loader-logo">7<span>Anime</span></div>
-    <div class="loader-line big shimmer"></div>
-    <div class="loader-line shimmer"></div>
-    <div class="loader-line shimmer"></div>
-    <div class="loader-line shimmer"></div>
+  <!-- HEADER -->
+  <header>
+    <div class="container nav-container">
+      <a href="#" class="brand-logo">
+        <span class="badge-7">7</span>Anime
+      </a>
+
+      <nav class="nav-links">
+        <a href="#" class="nav-link active">Home</a>
+        <a href="#" class="nav-link">Explore</a>
+        <a href="#" class="nav-link">Genres</a>
+        <a href="#" class="nav-link">Movies</a>
+        <a href="#" class="nav-link">TV Series</a>
+      </nav>
+
+      <!-- Search Component with 300ms Debounce & Live Dropdown -->
+      <div class="search-box-wrapper">
+        <div class="search-box">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          <input type="text" id="searchInput" placeholder="Search anime, movies, genres..." autocomplete="off">
+        </div>
+        <div class="search-dropdown" id="searchDropdown"></div>
+      </div>
+
+      <div class="nav-actions">
+        <button class="icon-btn" aria-label="Notifications">🔔</button>
+        <button class="icon-btn" aria-label="Profile">👤</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="container">
+
+    <!-- HERO BANNER SECTION -->
+    <section class="hero-section" id="heroBanner">
+      <div class="hero-content">
+        <span class="hero-badge">🔥 Trending #1</span>
+        <h1 class="hero-title" id="heroTitle">Solo Leveling Season 2</h1>
+        <div class="hero-meta" id="heroMeta">Action • Fantasy • Sci-Fi | Ep 12 Available</div>
+        <p class="hero-desc" id="heroDesc">
+          Sung Jin-Woo continues his journey to become the strongest hunter in a world full of monsters and hidden secrets.
+        </p>
+        <div class="hero-btns">
+          <button class="btn-primary">▶ Watch Now</button>
+          <button class="btn-secondary" id="watchlistBtn" onclick="toggleHeroWatchlist()">+ Add to Watchlist</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CATEGORIES / QUICK NAVIGATION BANNER -->
+    <section class="category-grid">
+      <div class="cat-card">
+        <div class="cat-info">
+          <h3>Anime</h3>
+          <p>Explore Anime Collection</p>
+        </div>
+        <div class="cat-arrow">➔</div>
+      </div>
+      <div class="cat-card" onclick="openAgeGate()">
+        <div class="cat-info">
+          <h3>🔞 Hentai</h3>
+          <p>18+ Content Only</p>
+        </div>
+        <div class="cat-arrow">➔</div>
+      </div>
+      <div class="cat-card">
+        <div class="cat-info">
+          <h3>Movies</h3>
+          <p>Explore Movies Collection</p>
+        </div>
+        <div class="cat-arrow">➔</div>
+      </div>
+    </section>
+
+    <!-- SECTION 1: TRENDING THIS WEEK -->
+    <section>
+      <div class="section-title">
+        <h2>🔥 Trending This Week</h2>
+        <a href="#" class="view-all">View All ➔</a>
+      </div>
+      <div class="anime-grid" id="trendingGrid"></div>
+    </section>
+
+    <!-- SECTION 2: CONTINUE WATCHING -->
+    <section>
+      <div class="section-title">
+        <h2>🎬 Continue Watching</h2>
+        <a href="#" class="view-all">View All ➔</a>
+      </div>
+      <div class="continue-grid" id="continueGrid"></div>
+    </section>
+
+    <!-- SECTION 3: RECENTLY ADDED -->
+    <section>
+      <div class="section-title">
+        <h2>📅 Recently Added</h2>
+        <a href="#" class="view-all">View All ➔</a>
+      </div>
+      <div class="anime-grid" id="recentlyAddedGrid"></div>
+    </section>
+
+    <!-- SECTION 4: POPULAR GENRES -->
+    <section>
+      <div class="section-title">
+        <h2>⭐ Popular Genres</h2>
+        <a href="#" class="view-all">View All ➔</a>
+      </div>
+      <div class="genres-grid" id="genresGrid"></div>
+    </section>
+
+  </main>
+
+  <!-- 18+ AGE GATE MODAL -->
+  <div class="modal-overlay" id="ageGateModal">
+    <div class="modal-card">
+      <h3>🔞 18+ Age Verification</h3>
+      <p>This section contains mature content. Please confirm that you are at least 18 years old to proceed.</p>
+      <div class="modal-btns">
+        <button class="btn-primary" onclick="confirmAge(true)">I am 18 or older</button>
+        <button class="btn-secondary" onclick="confirmAge(false)">Cancel</button>
+      </div>
+    </div>
   </div>
-</div>
 
-<header>
-  <div class="navbar">
-
-    <div class="logo" onclick="navigate('home')">
-      7<span>Anime</span>
+  <!-- FOOTER -->
+  <footer>
+    <div class="container footer-container">
+      <div>
+        <div class="brand-logo" style="font-size: 18px;">
+          <span class="badge-7">7</span>Anime
+        </div>
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Watch Anime, Movies & More</p>
+      </div>
+      <div class="footer-links">
+        <a href="#">Home</a>
+        <a href="#">Explore</a>
+        <a href="#">Genres</a>
+        <a href="#">Movies</a>
+        <a href="#">TV Series</a>
+        <a href="#">Settings</a>
+      </div>
     </div>
-
-    <button class="menu-btn" onclick="toggleMenu()">☰</button>
-
-    <nav class="nav-links" id="navLinks">
-      <button data-page="home" onclick="navigate('home')">Home</button>
-      <button data-page="search" onclick="navigate('search')">Search</button>
-      <button data-page="explore" onclick="navigate('explore')">Explore</button>
-      <button data-page="schedule" onclick="navigate('schedule')">Schedule</button>
-      <button data-page="genres" onclick="navigate('genres')">Genres</button>
-      <button data-page="movies" onclick="navigate('movies')">Movies</button>
-      <button data-page="tv" onclick="navigate('tv')">TV Series</button>
-      <button data-page="watchlist" onclick="navigate('watchlist')">Watchlist</button>
-      <button data-page="history" onclick="navigate('history')">History</button>
-      <button data-page="profile" onclick="navigate('profile')">Profile</button>
-      <button data-page="settings" onclick="navigate('settings')">Settings</button>
-    </nav>
-
-    <div class="header-search">
-      <input
-        id="headerSearch"
-        placeholder="Search anime..."
-        oninput="quickSearch(this.value)"
-      >
-    </div>
-
-  </div>
-</header>
-
-<main id="app"></main>
-
-<div id="toast"></div>
-
-<script>
-
-/* =====================================================
-   DATA
-===================================================== */
-
-const animeData = [
-  {
-    id:1,
-    title:"Shadow Nexus",
-    type:"TV Series",
-    year:2026,
-    genre:["Action","Fantasy"],
-    episodes:24,
-    rating:"9.1",
-    description:"A mysterious warrior discovers a hidden power capable of changing the world."
-  },
-  {
-    id:2,
-    title:"Sky Warriors",
-    type:"TV Series",
-    year:2025,
-    genre:["Action","Adventure"],
-    episodes:12,
-    rating:"8.8",
-    description:"Young pilots rise into the sky to defend their city from an unknown enemy."
-  },
-  {
-    id:3,
-    title:"Moonlight Academy",
-    type:"TV Series",
-    year:2026,
-    genre:["Romance","School"],
-    episodes:13,
-    rating:"8.5",
-    description:"A magical academy where every student has a secret."
-  },
-  {
-    id:4,
-    title:"Cyber Ronin",
-    type:"Movie",
-    year:2025,
-    genre:["Action","Sci-Fi"],
-    episodes:1,
-    rating:"8.9",
-    description:"A cybernetic samurai returns to a city ruled by machines."
-  },
-  {
-    id:5,
-    title:"Ocean Hearts",
-    type:"TV Series",
-    year:2024,
-    genre:["Romance","Drama"],
-    episodes:24,
-    rating:"8.2",
-    description:"Two childhood friends reunite after years apart."
-  },
-  {
-    id:6,
-    title:"Dragon Realm",
-    type:"TV Series",
-    year:2025,
-    genre:["Fantasy","Adventure"],
-    episodes:25,
-    rating:"9.0",
-    description:"A young hero enters a forgotten dragon kingdom."
-  },
-  {
-    id:7,
-    title:"Neon City",
-    type:"Movie",
-    year:2026,
-    genre:["Sci-Fi","Action"],
-    episodes:1,
-    rating:"8.7",
-    description:"A detective searches for the last human memory."
-  },
-  {
-    id:8,
-    title:"Ghost Signal",
-    type:"TV Series",
-    year:2025,
-    genre:["Horror","Mystery"],
-    episodes:12,
-    rating:"8.4",
-    description:"A radio station receives messages from somewhere beyond reality."
-  },
-  {
-    id:9,
-    title:"Crimson Blade",
-    type:"TV Series",
-    year:2026,
-    genre:["Action","Historical"],
-    episodes:20,
-    rating:"8.9",
-    description:"A swordsman protects his village from a powerful clan."
-  },
-  {
-    id:10,
-    title:"Star Runner",
-    type:"TV Series",
-    year:2024,
-    genre:["Sci-Fi","Adventure"],
-    episodes:16,
-    rating:"8.1",
-    description:"A courier races across galaxies to deliver one mysterious package."
-  },
-  {
-    id:11,
-    title:"Dream Garden",
-    type:"TV Series",
-    year:2025,
-    genre:["Fantasy","Romance"],
-    episodes:10,
-    rating:"8.3",
-    description:"A girl enters dreams to find someone she lost."
-  },
-  {
-    id:12,
-    title:"Last Horizon",
-    type:"Movie",
-    year:2026,
-    genre:["Adventure","Drama"],
-    episodes:1,
-    rating:"9.2",
-    description:"The final explorers search for a new home beyond the horizon."
-  }
-];
-
-
-/* =====================================================
-   STORAGE
-===================================================== */
-
-let watchlist = JSON.parse(
-  localStorage.getItem("7anime_watchlist") || "[]"
-);
-
-let favorites = JSON.parse(
-  localStorage.getItem("7anime_favorites") || "[]"
-);
-
-let history = JSON.parse(
-  localStorage.getItem("7anime_history") || "[]"
-);
-
-let progress = JSON.parse(
-  localStorage.getItem("7anime_progress") || "{}"
-);
-
-let settings = JSON.parse(
-  localStorage.getItem("7anime_settings") || "{}"
-);
-
-let currentAnime = null;
-let currentEpisode = 1;
-let playerProgress = 0;
-let playerTimer = null;
-
-
-/* =====================================================
-   HELPERS
-===================================================== */
-
-function save(){
-  localStorage.setItem(
-    "7anime_watchlist",
-    JSON.stringify(watchlist)
-  );
-
-  localStorage.setItem(
-    "7anime_favorites",
-    JSON.stringify(favorites)
-  );
-
-  localStorage.setItem(
-    "7anime_history",
-    JSON.stringify(history)
-  );
-
-  localStorage.setItem(
-    "7anime_progress",
-    JSON.stringify(progress)
-  );
-
-  localStorage.setItem(
-    "7anime_settings",
-    JSON.stringify(settings)
-  );
-}
-
-function animeById(id){
-  return animeData.find(a => a.id == id);
-}
-
-function toast(message){
-  const el = document.getElementById("toast");
-
-  el.textContent = message;
-  el.classList.add("show");
-
-  setTimeout(()=>{
-    el.classList.remove("show");
-  },2200);
-}
-
-function card(anime){
-  const saved = watchlist.includes(anime.id);
-  const fav = favorites.includes(anime.id);
-
-  return `
-    <div class="card">
-
-      <div
-        class="poster"
-        onclick="navigate('details',${anime.id})"
-        style="cursor:pointer"
-      >
-        <div class="poster-number">
-          ${anime.id}
-        </div>
-      </div>
-
-      <div class="card-info">
-
-        <div
-          class="card-title"
-          onclick="navigate('details',${anime.id})"
-          style="cursor:pointer"
-        >
-          ${anime.title}
-        </div>
-
-        <div class="card-meta">
-          ${anime.year} • ${anime.type} • ⭐ ${anime.rating}
-        </div>
-
-        <div class="card-buttons">
-
-          <button
-            class="small-btn"
-            onclick="navigate('watch',${anime.id})"
-          >
-            ▶ Watch
-          </button>
-
-          <button
-            class="small-btn"
-            onclick="toggleWatchlist(${anime.id})"
-          >
-            ${saved ? "✓ Saved" : "+ List"}
-          </button>
-
-          <button
-            class="small-btn"
-            onclick="toggleFavorite(${anime.id})"
-          >
-            ${fav ? "♥" : "♡"}
-          </button>
-
-        </div>
-
-      </div>
-
-    </div>
-  `;
-}
-
-function grid(items){
-  if(!items.length){
-    return `
-      <div class="info-box">
-        No anime found.
-      </div>
-    `;
-  }
-
-  return `
-    <div class="grid">
-      ${items.map(card).join("")}
-    </div>
-  `;
-}
-
-
-/* =====================================================
-   NAVIGATION
-===================================================== */
-
-function navigate(page,id=null){
-
-  stopPlayer();
-
-  window.scrollTo({
-    top:0,
-    behavior:"smooth"
-  });
-
-  document.querySelectorAll(".nav-links button")
-    .forEach(btn=>{
-      btn.classList.toggle(
-        "active",
-        btn.dataset.page === page
-      );
-    });
-
-  switch(page){
-
-    case "home":
-      renderHome();
-      break;
-
-    case "search":
-      renderSearch();
-      break;
-
-    case "explore":
-      renderExplore();
-      break;
-
-    case "details":
-      renderDetails(id);
-      break;
-
-    case "watch":
-      renderWatch(id);
-      break;
-
-    case "episodes":
-      renderEpisodes(id);
-      break;
-
-    case "schedule":
-      renderSchedule();
-      break;
-
-    case "genres":
-      renderGenres();
-      break;
-
-    case "movies":
-      renderCategory("Movie");
-      break;
-
-    case "tv":
-      renderCategory("TV Series");
-      break;
-
-    case "profile":
-      renderProfile();
-      break;
-
-    case "watchlist":
-      renderWatchlist();
-      break;
-
-    case "history":
-      renderHistory();
-      break;
-
-    case "favorites":
-      renderFavorites();
-      break;
-
-    case "continue":
-      renderContinue();
-      break;
-
-    case "settings":
-      renderSettings();
-      break;
-
-    case "about":
-      renderAbout();
-      break;
-
-    case "contact":
-      renderContact();
-      break;
-
-    case "privacy":
-      renderPrivacy();
-      break;
-
-    case "terms":
-      renderTerms();
-      break;
-
-    case "404":
-      render404();
-      break;
-
-    case "error":
-      renderError();
-      break;
-
-    default:
-      render404();
-  }
-}
-
-
-/* =====================================================
-   HOME
-===================================================== */
-
-function renderHome(){
-
-  const featured = animeData[0];
-
-  document.getElementById("app").innerHTML = `
-
-    <section class="page">
-
-      <div class="hero">
-
-        <div class="hero-content">
-
-          <div class="badge">
-            FEATURED ANIME
-          </div>
-
-          <h1>
-            ${featured.title}
-          </h1>
-
-          <p>
-            ${featured.description}
-          </p>
-
-          <div class="actions">
-
-            <button
-              class="btn"
-              onclick="navigate('watch',${featured.id})"
-            >
-              ▶ Watch Now
-            </button>
-
-            <button
-              class="btn secondary"
-              onclick="navigate('details',${featured.id})"
-            >
-              More Details
-            </button>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div class="section">
-
-        <div class="section-head">
-          <h2>Continue Watching</h2>
-
-          <button onclick="navigate('continue')">
-            View All →
-          </button>
-        </div>
-
-        ${renderContinueInline()}
-
-      </div>
-
-
-      <div class="section">
-
-        <div class="section-head">
-          <h2>Trending Anime</h2>
-
-          <button onclick="navigate('explore')">
-            Explore →
-          </button>
-        </div>
-
-        ${g
+  </footer>
+
+  <!-- ==========================================
+     9. JAVASCRIPT ENGINE & DATA MANAGEMENT
+     ========================================== -->
+  <script>
+    /* -------------------------------------------------------------
+       AAP APNA DATA / IMAGES / TITLES / DESCRIPTION YAHAN UPDATE KAREIN
+       ------------------------------------------------------------- */
+    const ANIME_DATABASE = [
+      {
+        id: "1",
+        title: "Solo Leveling Season 2",
+        type: "Anime",
+        rating: "9.4",
+        rank: 1,
+        genres: ["Action", "Fantasy", "Sci-Fi"],
+        episode: "Ep 12",
+        description: "Sung Jin-Woo continues his journey to become the strongest hunter in a world full of monsters.",
+        image: "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=500&q=80",
+    
