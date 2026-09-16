@@ -1,89 +1,32 @@
-/* SEARCH ENGINE & DEBOUNCE LOGIC (300ms) */
-const searchInput = document.getElementById("searchInput");
-const searchDropdown = document.getElementById("searchDropdown");
-let searchDebounceTimer;
-
 document.addEventListener("DOMContentLoaded", () => {
   renderTrending();
   renderContinueWatching();
   renderRecentlyAdded();
   renderGenres();
+  setupSearchDebounce();
   checkWatchlistState();
 });
 
-// Scoring Engine Rule: Title starts (80), Title contains (50), Type (30), Desc (10)[span_1](start_span)[span_1](end_span)
-function executeSearchScoring(query) {
-  return ANIME_DATABASE.map(item => {
-    let score = 0;
-    const title = item.title.toLowerCase();
-    const desc = item.description.toLowerCase();
-
-    if (title.startsWith(query)) score += 80;
-    else if (title.includes(query)) score += 50;
-    if (item.type.toLowerCase().includes(query)) score += 30;
-    if (desc.includes(query)) score += 10;
-
-    return { ...item, score };
-  })
-  .filter(item => item.score > 0)
-  .sort((a, b) => b.score - a.score);
-}
-
-searchInput.addEventListener("input", (e) => {
-  clearTimeout(searchDebounceTimer);
-  const query = e.target.value.trim().toLowerCase();
-
-  if (!query) {
-    searchDropdown.classList.remove("active");
-    return;
-  }
-
-  // 300ms Debounce[span_2](start_span)[span_2](end_span)
-  searchDebounceTimer = setTimeout(() => {
-    const results = executeSearchScoring(query);
-    displaySearchResults(results);
-  }, 300);
-});
-
-function displaySearchResults(results) {
-  if (results.length === 0) {
-    searchDropdown.innerHTML = `<div style="padding: 15px; text-align: center; color: var(--text-muted); font-size: 13px;">No results found</div>`;
-  } else {
-    searchDropdown.innerHTML = results.map(item => `
-      <div class="search-item">
-        <img src="${item.image}" alt="${item.title}">
-        <div>
-          <h4 style="font-size: 14px; color: #fff;">${item.title}</h4>
-          <p style="font-size: 12px; color: var(--text-muted);">${item.type} • ${item.episode}</p>
-        </div>
-      </div>
-    `).join('');
-  }
-  searchDropdown.classList.add("active");
-}
-
-document.addEventListener("click", (e) => {
-  if (!e.target.closest(".search-box-wrapper")) {
-    searchDropdown.classList.remove("active");
-  }
-});
-
-/* RENDERERS */
+// Grid Render Logic
 function renderTrending() {
   const container = document.getElementById("trendingGrid");
+  if (!ANIME_DATABASE || ANIME_DATABASE.length === 0) {
+    container.innerHTML = `<div class="empty-msg">No content added yet</div>`;
+    return;
+  }
   container.innerHTML = ANIME_DATABASE.map(item => `
     <div class="anime-card">
       <div class="card-thumb">
-        <img src="${item.image}" alt="${item.title}">
-        <span class="rank-badge">${item.rank}</span>
-        <span class="rating-badge">★ ${item.rating}</span>
+        <img src="${item.image || ''}" alt="">
+        ${item.rank ? `<span class="rank-badge">${item.rank}</span>` : ''}
+        ${item.rating ? `<span class="rating-badge">★ ${item.rating}</span>` : ''}
       </div>
       <div class="card-info">
-        <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 6px;">${item.title}</h4>
+        <h4>${item.title || ''}</h4>
         <div class="genre-tags">
-          ${item.genres.map(g => `<span class="tag">${g}</span>`).join('')}
+          ${(item.genres || []).map(g => `<span class="tag">${g}</span>`).join('')}
         </div>
-        <span style="font-size: 11px; color: var(--text-muted);">${item.episode}</span>
+        <span class="ep-tag">${item.episode || ''}</span>
       </div>
     </div>
   `).join('');
@@ -91,17 +34,21 @@ function renderTrending() {
 
 function renderContinueWatching() {
   const container = document.getElementById("continueGrid");
+  if (!ANIME_DATABASE || ANIME_DATABASE.length === 0) {
+    container.innerHTML = `<div class="empty-msg">No progress records</div>`;
+    return;
+  }
   container.innerHTML = ANIME_DATABASE.map(item => `
     <div class="cw-card">
       <div class="cw-thumb">
-        <img src="${item.image}" alt="${item.title}">
+        <img src="${item.image || ''}" alt="">
         <div class="progress-bar-bg">
-          <div class="progress-bar-fill" style="width: ${item.progress}%"></div>
+          <div class="progress-bar-fill" style="width: ${item.progress || 0}%"></div>
         </div>
       </div>
       <div class="card-info">
-        <h4 style="font-size: 14px; font-weight: 700;">${item.title}</h4>
-        <p style="font-size: 12px; color: var(--text-muted);">${item.episode} • ${item.progress}% watched</p>
+        <h4>${item.title || ''}</h4>
+        <p style="font-size: 11px; color: var(--text-muted);">${item.episode || ''} • ${item.progress || 0}%</p>
       </div>
     </div>
   `).join('');
@@ -109,18 +56,22 @@ function renderContinueWatching() {
 
 function renderRecentlyAdded() {
   const container = document.getElementById("recentlyAddedGrid");
+  if (!ANIME_DATABASE || ANIME_DATABASE.length === 0) {
+    container.innerHTML = `<div class="empty-msg">No recent items</div>`;
+    return;
+  }
   container.innerHTML = ANIME_DATABASE.slice().reverse().map(item => `
     <div class="anime-card">
       <div class="card-thumb">
-        <img src="${item.image}" alt="${item.title}">
-        <span class="rating-badge">★ ${item.rating}</span>
+        <img src="${item.image || ''}" alt="">
+        ${item.rating ? `<span class="rating-badge">★ ${item.rating}</span>` : ''}
       </div>
       <div class="card-info">
-        <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 6px;">${item.title}</h4>
+        <h4>${item.title || ''}</h4>
         <div class="genre-tags">
-          ${item.genres.map(g => `<span class="tag">${g}</span>`).join('')}
+          ${(item.genres || []).map(g => `<span class="tag">${g}</span>`).join('')}
         </div>
-        <span style="font-size: 11px; color: var(--text-muted);">${item.episode}</span>
+        <span class="ep-tag">${item.episode || ''}</span>
       </div>
     </div>
   `).join('');
@@ -128,47 +79,77 @@ function renderRecentlyAdded() {
 
 function renderGenres() {
   const container = document.getElementById("genresGrid");
+  if (!GENRES_LIST || GENRES_LIST.length === 0) {
+    container.innerHTML = `<div class="empty-msg">No genres defined</div>`;
+    return;
+  }
   container.innerHTML = GENRES_LIST.map(g => `
     <div class="genre-card">
-      <h4 style="font-size: 15px;">${g.name}</h4>
-      <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">${g.count}</p>
+      <h4 style="font-size: 14px;">${g.name}</h4>
+      <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">${g.count}</p>
     </div>
   `).join('');
 }
 
-/* LOCALSTORAGE WATCHLIST */
+/* 300ms Search Debounce Algorithm */
+function setupSearchDebounce() {
+  const inputs = document.querySelectorAll(".searchInput");
+  let searchTimer;
+
+  inputs.forEach(input => {
+    input.addEventListener("input", (e) => {
+      clearTimeout(searchTimer);
+      const query = e.target.value.trim().toLowerCase();
+      const dropdown = input.closest(".search-box-wrapper").querySelector(".searchDropdown");
+
+      if (!query) {
+        dropdown.classList.remove("active");
+        return;
+      }
+
+      searchTimer = setTimeout(() => {
+        const matches = (ANIME_DATABASE || []).filter(item => (item.title || '').toLowerCase().includes(query));
+        if (matches.length > 0) {
+          dropdown.innerHTML = matches.map(item => `
+            <div class="search-item">
+              <img src="${item.image || ''}" alt="">
+              <div>
+                <h4 style="font-size: 13px;">${item.title || ''}</h4>
+                <p style="font-size: 11px; color: var(--text-muted);">${item.type || ''} • ${item.episode || ''}</p>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          dropdown.innerHTML = `<div style="padding: 10px; font-size: 12px; color: var(--text-muted);">No results found</div>`;
+        }
+        dropdown.classList.add("active");
+      }, 300);
+    });
+  });
+}
+
+/* LocalStorage Watchlist Engine */
 function toggleHeroWatchlist() {
-  let watchlist = JSON.parse(localStorage.getItem("favorites") || "[]"); // favorites key[span_3](start_span)[span_3](end_span)
-  if (watchlist.includes("1")) {
-    watchlist = watchlist.filter(id => id !== "1");
+  let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+  if (favorites.includes("1")) {
+    favorites = favorites.filter(id => id !== "1");
   } else {
-    watchlist.push("1");
+    favorites.push("1");
   }
-  localStorage.setItem("favorites", JSON.stringify(watchlist));
+  localStorage.setItem("favorites", JSON.stringify(favorites));
   checkWatchlistState();
 }
 
 function checkWatchlistState() {
-  const watchlist = JSON.parse(localStorage.getItem("favorites") || "[]");
+  const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
   const btn = document.getElementById("watchlistBtn");
-  if (watchlist.includes("1")) {
-    btn.innerText = "✓ In Watchlist";
-  } else {
-    btn.innerText = "+ Add to Watchlist";
+  if (btn) {
+    btn.innerText = favorites.includes("1") ? "✓ In Watchlist" : "+ Add to Watchlist";
   }
 }
 
-/* 18+ AGE GATE */
-function openAgeGate() {
-  document.getElementById("ageGateModal").classList.add("active");
-}
-
+/* Age Verification Modal */
+function openAgeGate() { document.getElementById("ageGateModal").classList.add("active"); }
 function confirmAge(isAdult) {
   document.getElementById("ageGateModal").classList.remove("active");
-  if (isAdult) {
-    alert("Access Granted.");
-  } else {
-    alert("Access Denied.");
-  }
 }
-
