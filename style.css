@@ -497,3 +497,14 @@ header {
   max-width: 360px;
   text-align: center;
 }
+
+/* UTILITY & PLAYER RESPONSIVE CLASSES */
+.hidden {
+  display: none !important;
+}
+
+@media (min-width: 992px) {
+  .player-wrapper {
+    grid-template-columns: 1fr 340px !important;
+  }
+}
